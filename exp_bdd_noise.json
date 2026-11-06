@@ -1,0 +1,147 @@
+{
+  "trials": 3000,
+  "alpha": 0.99,
+  "dof": 20,
+  "chi2_threshold": 37.57,
+  "clean_false_alarm": [
+    0.0107,
+    0.0076,
+    0.015
+  ],
+  "per_target": [
+    {
+      "line": 0,
+      "meters": 4,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        1.0,
+        0.9987,
+        1
+      ]
+    },
+    {
+      "line": 6,
+      "meters": 8,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        1.0,
+        0.9987,
+        1
+      ]
+    },
+    {
+      "line": 7,
+      "meters": 6,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        1.0,
+        0.9987,
+        1
+      ]
+    },
+    {
+      "line": 8,
+      "meters": 9,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        1.0,
+        0.9987,
+        1
+      ]
+    },
+    {
+      "line": 9,
+      "meters": 8,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        1.0,
+        0.9987,
+        1
+      ]
+    },
+    {
+      "line": 10,
+      "meters": 5,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        1.0,
+        0.9987,
+        1
+      ]
+    },
+    {
+      "line": 11,
+      "meters": 5,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        1.0,
+        0.9987,
+        1
+      ]
+    },
+    {
+      "line": 12,
+      "meters": 5,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        0.9297,
+        0.92,
+        0.9383
+      ]
+    },
+    {
+      "line": 14,
+      "meters": 5,
+      "stealth_detect": [
+        0.0107,
+        0.0076,
+        0.015
+      ],
+      "random_detect": [
+        0.9993,
+        0.9976,
+        0.9998
+      ]
+    }
+  ],
+  "random_detect_range": [
+    0.93,
+    1.0
+  ],
+  "stealth_detect_range": [
+    0.011,
+    0.011
+  ]
+}

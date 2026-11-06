@@ -1,0 +1,35 @@
+{
+  "steps": [
+    {
+      "meter": 24,
+      "type": "bus-injection #4",
+      "attackable_after": 6,
+      "drop": 3
+    },
+    {
+      "meter": 12,
+      "type": "flow L12",
+      "attackable_after": 3,
+      "drop": 3
+    },
+    {
+      "meter": 11,
+      "type": "flow L11",
+      "attackable_after": 1,
+      "drop": 2
+    },
+    {
+      "meter": 0,
+      "type": "flow L0",
+      "attackable_after": 0,
+      "drop": 1
+    }
+  ],
+  "min_set": [
+    24,
+    12,
+    11,
+    0
+  ],
+  "size": 4
+}
