@@ -1,0 +1,367 @@
+{
+  "targets": [
+    0,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14
+  ],
+  "budgets": [
+    {
+      "line": 0,
+      "k_app": 4,
+      "k_tel": 18,
+      "approve_c_used": [
+        0,
+        1,
+        20,
+        23
+      ]
+    },
+    {
+      "line": 6,
+      "k_app": 8,
+      "k_tel": 17,
+      "approve_c_used": [
+        0,
+        1,
+        4,
+        6,
+        17,
+        22,
+        23,
+        24
+      ]
+    },
+    {
+      "line": 7,
+      "k_app": 6,
+      "k_tel": 14,
+      "approve_c_used": [
+        7,
+        10,
+        24,
+        27,
+        28,
+        29
+      ]
+    },
+    {
+      "line": 8,
+      "k_app": 5,
+      "k_tel": null,
+      "approve_c_used": [
+        8,
+        13,
+        24,
+        30,
+        31
+      ]
+    },
+    {
+      "line": 9,
+      "k_app": 8,
+      "k_tel": null,
+      "approve_c_used": [
+        8,
+        9,
+        11,
+        13,
+        14,
+        24,
+        27,
+        31
+      ]
+    },
+    {
+      "line": 10,
+      "k_app": 5,
+      "k_tel": 12,
+      "approve_c_used": [
+        10,
+        12,
+        27,
+        28,
+        29
+      ]
+    },
+    {
+      "line": 11,
+      "k_app": 5,
+      "k_tel": null,
+      "approve_c_used": [
+        11,
+        14,
+        27,
+        31,
+        32
+      ]
+    },
+    {
+      "line": 12,
+      "k_app": 5,
+      "k_tel": 11,
+      "approve_c_used": [
+        10,
+        12,
+        27,
+        28,
+        29
+      ]
+    },
+    {
+      "line": 14,
+      "k_app": 5,
+      "k_tel": 13,
+      "approve_c_used": [
+        11,
+        14,
+        27,
+        31,
+        32
+      ]
+    }
+  ],
+  "fdi_budget_ablation": [
+    {
+      "K": 1,
+      "A_joint": 0,
+      "A_tel": 0
+    },
+    {
+      "K": 2,
+      "A_joint": 0,
+      "A_tel": 0
+    },
+    {
+      "K": 3,
+      "A_joint": 0,
+      "A_tel": 0
+    },
+    {
+      "K": 4,
+      "A_joint": 1,
+      "A_tel": 0
+    },
+    {
+      "K": 5,
+      "A_joint": 6,
+      "A_tel": 0
+    },
+    {
+      "K": 6,
+      "A_joint": 7,
+      "A_tel": 0
+    },
+    {
+      "K": 7,
+      "A_joint": 7,
+      "A_tel": 0
+    },
+    {
+      "K": 8,
+      "A_joint": 9,
+      "A_tel": 0
+    },
+    {
+      "K": 9,
+      "A_joint": 9,
+      "A_tel": 0
+    },
+    {
+      "K": 10,
+      "A_joint": 9,
+      "A_tel": 0
+    },
+    {
+      "K": 11,
+      "A_joint": 9,
+      "A_tel": 1
+    },
+    {
+      "K": 12,
+      "A_joint": 9,
+      "A_tel": 2
+    },
+    {
+      "K": 13,
+      "A_joint": 9,
+      "A_tel": 3
+    },
+    {
+      "K": 14,
+      "A_joint": 9,
+      "A_tel": 4
+    },
+    {
+      "K": 15,
+      "A_joint": 9,
+      "A_tel": 4
+    },
+    {
+      "K": 16,
+      "A_joint": 9,
+      "A_tel": 4
+    },
+    {
+      "K": 17,
+      "A_joint": 9,
+      "A_tel": 5
+    },
+    {
+      "K": 18,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 19,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 20,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 21,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 22,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 23,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 24,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 25,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 26,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 27,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 28,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 29,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 30,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 31,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 32,
+      "A_joint": 9,
+      "A_tel": 6
+    },
+    {
+      "K": 33,
+      "A_joint": 9,
+      "A_tel": 6
+    }
+  ],
+  "chi2_thresholds": {
+    "0.9": 28.41198058430563,
+    "0.95": 31.410432844230918,
+    "0.99": 37.56623478662507,
+    "0.999": 45.31474661812586
+  },
+  "bdd_sensitivity": [
+    {
+      "line": 0,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 1.0
+    },
+    {
+      "line": 6,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 1.0
+    },
+    {
+      "line": 7,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 1.0
+    },
+    {
+      "line": 8,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 1.0
+    },
+    {
+      "line": 9,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 1.0
+    },
+    {
+      "line": 10,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 0.995
+    },
+    {
+      "line": 11,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 1.0
+    },
+    {
+      "line": 12,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 0.74
+    },
+    {
+      "line": 14,
+      "J_clean": 0.0,
+      "J_stealth": 0.0,
+      "passes_all_thresholds": true,
+      "random_inject_detect_rate_at_0p99": 0.98
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+system,line,k_app,k_tel,k_tel_status,delta_k
+IEEE-39,11,11,,infeasible,
+IEEE-39,15,11,20,optimal,9
+IEEE-39,12,11,13,optimal,2
+IEEE-39,10,12,,infeasible,
+IEEE-39,24,14,24,optimal,10
+IEEE-39,34,15,,infeasible,
+IEEE-39,19,11,,infeasible,
+IEEE-39,9,12,,infeasible,
+IEEE-39,33,15,,infeasible,
+IEEE-39,5,10,15,optimal,5
+IEEE-118,39,16,27,optimal,11
+IEEE-118,86,16,25,optimal,9
+IEEE-118,58,22,,infeasible,
+IEEE-118,68,21,27,optimal,6
+IEEE-118,131,21,,infeasible,
+IEEE-118,104,15,,infeasible,

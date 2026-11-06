@@ -1,0 +1,5 @@
+step,meter_id,type_location,attackable_after,marginal_drop
+1,24,bus-injection #4,6,3
+2,12,flow L12,3,3
+3,11,flow L11,1,2
+4,0,flow L0,0,1

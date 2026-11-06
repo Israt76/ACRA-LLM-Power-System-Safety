@@ -1,0 +1,154 @@
+{
+  "ieee39": {
+    "case": "IEEE-39",
+    "meters": 84,
+    "n_targets": 10,
+    "sampling": "seeded random (SEED=1234)",
+    "solver_time_limit_s": 60,
+    "k_app_range": [
+      10,
+      15
+    ],
+    "k_tel_range": [
+      13,
+      24
+    ],
+    "tel_proven_infeasible": 6,
+    "tel_timeout": 0,
+    "mean_delta_k": 6.5,
+    "per_target": [
+      {
+        "line": 11,
+        "k_app": 11,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      },
+      {
+        "line": 15,
+        "k_app": 11,
+        "k_tel": 20,
+        "k_tel_status": "optimal",
+        "delta_k": 9
+      },
+      {
+        "line": 12,
+        "k_app": 11,
+        "k_tel": 13,
+        "k_tel_status": "optimal",
+        "delta_k": 2
+      },
+      {
+        "line": 10,
+        "k_app": 12,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      },
+      {
+        "line": 24,
+        "k_app": 14,
+        "k_tel": 24,
+        "k_tel_status": "optimal",
+        "delta_k": 10
+      },
+      {
+        "line": 34,
+        "k_app": 15,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      },
+      {
+        "line": 19,
+        "k_app": 11,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      },
+      {
+        "line": 9,
+        "k_app": 12,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      },
+      {
+        "line": 33,
+        "k_app": 15,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      },
+      {
+        "line": 5,
+        "k_app": 10,
+        "k_tel": 15,
+        "k_tel_status": "optimal",
+        "delta_k": 5
+      }
+    ]
+  },
+  "ieee118": {
+    "case": "IEEE-118",
+    "meters": 303,
+    "n_targets": 6,
+    "sampling": "seeded random (SEED=1234)",
+    "solver_time_limit_s": 60,
+    "k_app_range": [
+      15,
+      22
+    ],
+    "k_tel_range": [
+      25,
+      27
+    ],
+    "tel_proven_infeasible": 3,
+    "tel_timeout": 0,
+    "mean_delta_k": 8.67,
+    "per_target": [
+      {
+        "line": 39,
+        "k_app": 16,
+        "k_tel": 27,
+        "k_tel_status": "optimal",
+        "delta_k": 11
+      },
+      {
+        "line": 86,
+        "k_app": 16,
+        "k_tel": 25,
+        "k_tel_status": "optimal",
+        "delta_k": 9
+      },
+      {
+        "line": 58,
+        "k_app": 22,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      },
+      {
+        "line": 68,
+        "k_app": 21,
+        "k_tel": 27,
+        "k_tel_status": "optimal",
+        "delta_k": 6
+      },
+      {
+        "line": 131,
+        "k_app": 21,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      },
+      {
+        "line": 104,
+        "k_app": 15,
+        "k_tel": null,
+        "k_tel_status": "infeasible",
+        "delta_k": null
+      }
+    ]
+  }
+}

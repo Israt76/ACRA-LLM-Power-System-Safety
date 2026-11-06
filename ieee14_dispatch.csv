@@ -1,0 +1,10 @@
+load,dispatch,A_joint_at_8,A_tel_at_8,mean_delta_k
+0.95,uniform,9,1,8.17
+0.95,ramped,9,1,8.17
+0.95,alternating,9,1,8.17
+1.05,uniform,9,0,8.67
+1.05,ramped,9,0,8.67
+1.05,alternating,9,0,8.67
+1.15,uniform,9,0,8.83
+1.15,ramped,9,0,9.0
+1.15,alternating,9,0,9.0

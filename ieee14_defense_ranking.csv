@@ -1,0 +1,12 @@
+rank,meter_id,type_location,sel_freq,attackable_after,marginal_drop
+1,27,bus-injection #7,6,9,0
+2,24,bus-injection #4,4,6,3
+3,31,bus-injection #11,4,3,3
+4,10,flow/line L10,3,1,2
+5,28,bus-injection #8,3,1,0
+6,14,flow/line L14,3,1,0
+7,11,flow/line L11,3,1,0
+8,29,bus-injection #9,3,1,0
+9,8,flow/line L8,2,1,0
+10,1,flow/line L1,2,1,0
+11,23,bus-injection #3,2,0,1
