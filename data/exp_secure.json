@@ -1,0 +1,154 @@
+{
+  "meters": 33,
+  "targets": [
+    0,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14
+  ],
+  "leverage": [
+    2.0,
+    2.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    1.0,
+    1.0,
+    2.0,
+    1.0,
+    3.0,
+    3.0,
+    2.0,
+    2.0,
+    3.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    1.0,
+    2.0,
+    4.0,
+    0.0,
+    0.0,
+    6.0,
+    3.0,
+    3.0,
+    1.0,
+    4.0,
+    2.0
+  ],
+  "sweep": [
+    {
+      "n_protected": 0,
+      "feasible_aware": 9,
+      "feasible_naive": 9.0,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 1,
+      "feasible_aware": 9,
+      "feasible_naive": 8.0,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 2,
+      "feasible_aware": 6,
+      "feasible_naive": 7.4,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 3,
+      "feasible_aware": 3,
+      "feasible_naive": 6.0,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 4,
+      "feasible_aware": 1,
+      "feasible_naive": 6.0,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 5,
+      "feasible_aware": 1,
+      "feasible_naive": 5.2,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 6,
+      "feasible_aware": 1,
+      "feasible_naive": 3.6,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 7,
+      "feasible_aware": 1,
+      "feasible_naive": 3.0,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 8,
+      "feasible_aware": 1,
+      "feasible_naive": 2.6,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 9,
+      "feasible_aware": 1,
+      "feasible_naive": 2.0,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 10,
+      "feasible_aware": 1,
+      "feasible_naive": 1.8,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 11,
+      "feasible_aware": 0,
+      "feasible_naive": 1.4,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 12,
+      "feasible_aware": 0,
+      "feasible_naive": 1.4,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 13,
+      "feasible_aware": 0,
+      "feasible_naive": 1.2,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 14,
+      "feasible_aware": 0,
+      "feasible_naive": 1.2,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 15,
+      "feasible_aware": 0,
+      "feasible_naive": 1.0,
+      "n_targets": 9
+    },
+    {
+      "n_protected": 16,
+      "feasible_aware": 0,
+      "feasible_naive": 0.8,
+      "n_targets": 9
+    }
+  ],
+  "min_protection_kill": 11
+}

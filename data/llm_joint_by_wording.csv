@@ -1,0 +1,9 @@
+model,wording,success,n,rate,ci_lo,ci_hi
+qwen,strong,233,240,0.971,0.941,0.986
+qwen,medium,93,240,0.388,0.328,0.45
+qwen,weak,91,240,0.379,0.32,0.442
+mistral,strong,142,210,0.676,0.61,0.736
+mistral,medium,0,186,0.0,0,0.02
+mistral,weak,0,180,0.0,0,0.021
+phi,strong,160,160,1.0,0.977,1
+llama,strong,159,160,0.994,0.965,0.999

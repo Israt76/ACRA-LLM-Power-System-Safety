@@ -1,0 +1,345 @@
+\documentclass{ieeeaccess}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{array}
+\newlength{\xfigwd}\setlength{\xfigwd}{0pt}% class caption helper expects this length
+% Fix ieeeaccess.cls bug: its \appendices definition has a stray period OUTSIDE
+% the \def braces (\def\thesectiondis{APPENDIX \Alph{section}}.) which typesets a
+% lone "." after the body. Redefine with the period correctly inside the braces.
+\makeatletter
+\def\appendices{\par
+  \def\theHsection{Appendix.\Alph{section}}%
+  \xdef\Hy@chapapp{appendix}%
+  \setcounter{section}{-1}%
+  \setcounter{subsection}{0}%
+  \setcounter{subsubsection}{0}%
+  \setcounter{paragraph}{0}%
+  \def\thesection{\Alph{section}}%
+  \def\thesectiondis{APPENDIX \Alph{section}.}%
+  \refstepcounter{section}%
+  \setcounter{section}{0}%
+}
+\makeatother
+
+\begin{document}
+\history{Manuscript prepared October 2026.}
+\doi{10.1109/ACCESS.XXXX.DOI}% placeholder; DOI assigned by IEEE on acceptance
+
+\title{ACRA: Coordinated Semantic--Telemetry Attacks on DC/LODF Safety Shields for LLM-Based Power-System Agents}
+\author{\uppercase{Israt Jahan Aunika}\authorrefmark{1} and \uppercase{Stefan Robila}\authorrefmark{2}}
+\address[1]{Department of Data Science, Montclair State University, Montclair, NJ 07043 USA (e-mail: isratchy433@gmail.com)}
+\address[2]{School of Computing, College of Science and Mathematics, Montclair State University, Montclair, NJ 07043 USA (e-mail: robilas@montclair.edu)}
+
+\markboth
+{Aunika \headeretal: Coordinated Semantic--Telemetry Attacks on DC/LODF Safety Shields}
+{Aunika \headeretal: Coordinated Semantic--Telemetry Attacks on DC/LODF Safety Shields}
+
+\corresp{Corresponding author: Israt Jahan Aunika (e-mail: isratchy433@gmail.com).}
+
+\begin{abstract}
+Large language model (LLM) agents are increasingly proposed for decision support and control in cyber-physical power systems, where a pre-execution safety shield---typically a digital-twin verifier---is intended to block unsafe actions. This paper examines a cross-layer failure mode in which an adversary coordinates two channels: a semantic manipulation that encourages the agent to propose a target action, and a stealthy telemetry false-data injection that makes the verifier evaluate that action against a falsified system state. The question addressed is not whether prompt manipulation and false-data injection can be combined, but whether semantic access yields a measurable capability advantage over a strong telemetry-only attacker. The attack, named the Action-Coupled Reachability Attack, is formalized through the reachable sets of unsafe actions attainable under a telemetry budget and through a budget-advantage metric. On the IEEE 14-bus system the coordinated attacker reaches unsafe switching actions with four to eight compromised meters, whereas a strong telemetry-only attacker requires eleven to eighteen meters or is provably infeasible, and reaches no target within an eight-meter budget. The advantage is robust across sixteen load levels, nine load-by-dispatch scenarios, and line-rating headroom from 1.25 to 1.50, persists under per-meter magnitude constraints, and generalizes to the IEEE 39- and 118-bus systems. Under measurement noise the coordinated injection is detected at the one-percent false-alarm rate, while an equal-magnitude random injection is detected almost always. End-to-end experiments on four open LLMs show that only the coordinated condition succeeds. A secure-estimation analysis shows that protecting four formally selected high-leverage meters eliminates the attack. The attack is explicitly scoped: the DC-constructed injection defeats a DC/LODF digital-twin verifier but, as constructed, does not transfer to a full AC power-flow verifier.
+\end{abstract}
+
+\begin{keywords}
+Cyber-physical systems, digital twins, false-data injection, large language model agents, power system security, safety verification, secure state estimation, trustworthy artificial intelligence.
+\end{keywords}
+
+\titlepgskip=-15pt
+\maketitle
+
+\section{Introduction}
+\PARstart{L}{arge} language model (LLM) agents are moving from advisory roles into operational loops for cyber-physical systems, including electric power grids, where they are asked to interpret telemetry, reason over operating procedures, and recommend or issue control actions such as line switching and redispatch \cite{llmgrid,llmgrid2,agentsec,foundation}. Because a language model can be wrong or manipulated, practical deployments place a deterministic safety check between the agent and the plant: a digital-twin verifier \cite{tao} that simulates the proposed action against the current estimated state and permits it only if no operational limit is violated. The appeal of this pattern is that it does not trust the language model; it trusts physics.
+
+This paper argues that the trust is misplaced precisely when it matters most. The verifier and the agent are not independent: both consume the same state estimate produced by the control center from field measurements. An attacker who can influence those measurements does not merely feed the agent bad data; it feeds the verifier the same bad data, so the independent-looking safety check is compromised in the same stroke as the decision it audits. This work terms the resulting capability a semantic-to-physical reachability attack: by combining a manipulation of the agent's semantic context with a coordinated corruption of the shared state estimate, an attacker can drive the system to physically unsafe actions that are unreachable through either channel alone.
+
+The scientific question is deliberately stronger than the observation that prompt manipulation and false-data injection (FDI) can be combined. Telemetry-only attacks against state estimation are already powerful and well studied \cite{liu,dan}; they can bias the estimate and, in principle, mislead both an operator and a verifier. A semantic channel is therefore scientifically meaningful only if it grants the adversary \emph{additional} capability under comparable resource constraints. This study examines two falsifiable forms of such an advantage: (i) semantic access enlarges the set of unsafe actions that are stealthily reachable under a fixed telemetry budget, and (ii) semantic access lowers the minimum telemetry budget required to make a selected unsafe action reachable.
+
+\subsection{Operational Stakes}
+The target action studied here is line opening (switching), a control lever studied extensively in the optimal-transmission-switching literature \cite{fisher,hedman}. Opening a line that is genuinely overloaded in the true state redistributes its flow onto neighboring branches and can push one or more of them past their thermal limits; in an $N{-}1$-insecure condition this is exactly the trigger for cascading overloads and, in the worst case, a wider outage. A safety shield that can be made to approve such an action therefore converts a language-level manipulation into a physical-consequence attack---the pathway this paper measures.
+
+\subsection{Contributions}
+The attack is named the Action-Coupled Reachability Attack (ACRA); the acronym is introduced by this work. The contributions are threefold, and novelty is \emph{not} claimed for prompt injection, FDI, digital twins, or secure estimation individually.
+\begin{enumerate}
+\item A formal cross-layer action-coupled reachability model, with the reachable-set measures $A_{\mathrm{joint}}(K)$ and $A_{\mathrm{tel}}(K)$ and the telemetry-budget advantage $\Delta k = k_{\mathrm{tel}}-k_{\mathrm{app}}$, which quantify exactly how much semantic access enlarges reachability or lowers the required telemetry budget.
+\item An empirical demonstration that semantic access strictly enlarges the set of stealthily reachable unsafe actions under a fixed telemetry budget, robust across operating points, generation dispatch, rating headroom, measurement-magnitude limits, three network sizes, and four LLMs.
+\item A defense result that connects the attack structure to a formal greedy high-leverage meter-selection algorithm (four meters suffice on IEEE-14), together with an explicit AC-verifier scope result delineating where the present attack applies.
+\end{enumerate}
+The remainder of the paper is organized as follows. Section~\ref{sec:prelim} reviews preliminaries. Section~\ref{sec:threat} defines the architecture and threat model. Section~\ref{sec:method} formalizes ACRA. Sections~\ref{sec:setup} and \ref{sec:results} present the experimental design and results. Section~\ref{sec:related} surveys related work, Section~\ref{sec:disc} discusses implications, and Sections~\ref{sec:lim}--\ref{sec:concl} conclude.
+
+\section{Preliminaries and System Model}\label{sec:prelim}
+This section fixes notation and reviews the standard tools the attack and defense build upon. The study uses the IEEE 14-, 39-, and 118-bus benchmark systems \cite{pandapower}; the IEEE 14-bus system is the primary testbed and the larger systems are used for scale-up.
+
+\subsection{DC Power Flow}
+Under the standard DC linearization, with per-unit reactances and small angle differences, the vector of branch active-power flows $f$ is linear in the non-slack bus voltage angles $\theta$,
+\begin{equation}
+f = F\,\theta,
+\end{equation}
+where $F$ is the branch--angle sensitivity matrix. True physical outcomes in this paper are nonetheless always computed with a full nonlinear AC power flow, so that ``unsafe'' means unsafe in AC, not merely in the linear approximation over which the attacker and verifier reason.
+
+\subsection{Line Ratings}
+Thermal ratings are derived from the base-case loading with a fixed headroom factor $\eta$ (default $\eta=1.35$; a sensitivity to 1.25 and 1.50 appears in Section~\ref{sec:robust}). This is disclosed because the stock per-unit current limits of the benchmark cases are not calibrated for a security-constrained switching study; the sensitivity analysis shows the results are not an artifact of this choice.
+
+\subsection{State Estimation and Bad-Data Detection}
+The control center estimates the bus-angle state from a redundant measurement set $z$ consisting of branch active-power flows and bus power injections, related to the state by the measurement Jacobian $H$ as $z = H\theta + e$ with noise $e$ \cite{abur,monticelli}. The weighted-least-squares (WLS) estimate is
+\begin{equation}
+\hat{x} = (H^{\top} W H)^{-1} H^{\top} W z,
+\end{equation}
+with $W$ the inverse-covariance weighting; measurement noise is modeled per meter at one percent of the measured quantity. Gross errors are screened by the chi-square test on the weighted residual
+\begin{equation}
+J = r^{\top} W r,\qquad r = z - H\hat{x},
+\end{equation}
+declaring bad data when $J$ exceeds the threshold $\tau_\alpha=\chi^2_{\alpha}(m-n)$ at significance $\alpha=0.99$, where $m$ is the number of measurements and $n$ the number of states.
+
+\subsection{Stealthy False-Data Injection}
+A foundational result \cite{liu} states that an injection $a$ added to the measurements, $z \mapsto z + a$, is undetectable by the residual test if and only if it lies in the column space of $H$, i.e.,
+\begin{equation}
+a = Hc \quad\text{for some state shift } c, \label{eq:stealth}
+\end{equation}
+because then $z+a$ is consistent with the shifted state $\hat{x}+c$ and the residual $r$ is unchanged. Equation~\eqref{eq:stealth} is the stealth constraint used throughout, and the detectability of such attacks against power-system state estimation has been studied extensively \cite{bobba,kosut,huggiampapa}.
+
+\subsection{Post-Contingency Verification}
+Line-outage distribution factors (LODF) \cite{wood} give a fast linear prediction of how branch flows redistribute when a line $L$ is opened. If $\ell^{L}$ is the LODF column for line $L$, the predicted post-opening flow on branch $j$ is $f_j + \ell^{L}_j f_L$. A digital-twin verifier for a switching agent naturally checks these predicted flows against ratings; this is the verifier modeled here. This single state estimate $\hat{x}$ is the one artifact that the LLM agent and the verifier both consume---the dependency the attack exploits.
+
+\section{Threat Model}\label{sec:threat}
+\subsection{LLM-Agent Safety-Shield Architecture}
+The architecture (Fig.~\ref{fig:arch}) comprises four stages: (i) retrieval of operating procedures or evidence; (ii) observation of the estimated state $\hat{x}$ produced from telemetry; (iii) an LLM agent that proposes a control action $a'$ (hold, redispatch, or open a specified line); and (iv) a pre-execution verifier that evaluates $a'$ against a digital-twin model and either approves or rejects it. The verifier is modeled as a DC/LODF twin, a common fast-screening choice; the AC case is treated in Section~\ref{sec:ac}.
+
+The verifier $V$ approves an action when the predicted post-action flows on its input state are within all branch ratings. Let $x$ denote the true physical state and $\hat{x}$ the estimated state the control center computes from (possibly manipulated) telemetry. The coordinated adversary engineers measurements so that
+\begin{equation}
+V(a',\hat{x}) = \textsc{safe}\qquad\text{while}\qquad V(a',x) = \textsc{unsafe}. \label{eq:approval}
+\end{equation}
+In words, the verifier approves the switching action because, on the falsified estimate $\hat{x}$, opening the target line appears to keep every remaining branch within rating, whereas on the true state $x$ the same action overloads at least one branch. A physics-based check approves an unsafe action precisely because it reasons over corrupted physics. An end-to-end attack succeeds only when the agent proposes the target action, the verifier approves it, the action is genuinely unsafe in the true AC system, and the bad-data detector is not triggered (Fig.~\ref{fig:pipe}).
+
+\begin{figure*}[!t]\centering
+\includegraphics[width=0.92\textwidth]{fig1_architecture.png}
+\caption{Coordinated semantic--telemetry attack. The LLM agent and the digital-twin verifier share one state estimate. ACRA pairs a forged procedure (semantic channel) with a stealthy FDI $a=Hc$ (telemetry channel) around a single target switching action.}
+\label{fig:arch}
+\end{figure*}
+\begin{figure*}[!t]\centering
+\includegraphics[width=0.95\textwidth]{fig_pipeline.png}
+\caption{Per-trial end-to-end pipeline. A trial counts as a success only if all four end-to-end conditions hold simultaneously: the agent proposes the target action, the verifier approves it, the bad-data detector stays silent, and the action is genuinely unsafe in the true AC system.}
+\label{fig:pipe}
+\end{figure*}
+
+\subsection{Adversary Model}
+The adversary has two separable capabilities. In the \emph{semantic} channel, it manipulates retrieved procedures or evidence that influence the agent, an instance of context/prompt injection against LLM agents \cite{agentsec}. In the \emph{telemetry} channel, it injects false measurements subject to the stealth constraint~\eqref{eq:stealth}. The telemetry-only baseline is deliberately given every advantage---it may use false telemetry to influence both the agent and the verifier---because the contribution is that semantic access adds capability \emph{beyond} this strong baseline.
+
+Consistent with the classical FDI model \cite{liu,dan}, the attacker is assumed to know the measurement model $H$ (a white-box telemetry adversary) and the verifier's limit-checking logic; the semantic channel assumes the ability to influence retrieved procedure text. These are standard, deliberately strong assumptions that make the telemetry-only baseline as capable as possible, so the measured advantage of the semantic channel is \emph{conservative}. Partial-knowledge attackers (noisy or estimated $H$) would face a strictly harder problem; characterizing that degradation is future work.
+
+The telemetry budget $K$ is the number of field measurements the adversary can compromise. It is the standard cost metric in the FDI-protection literature, where defenders seek the minimum protected set that rules out any undetectable attack \cite{dan,kim}; here it is used symmetrically as the attacker's resource. A smaller required budget means a cheaper, more deployable attack.
+
+A natural question is whether compromising four to eight field measurements is operationally plausible. This work makes no claim that it is easy: the budget $K$ is a comparative attack-cost metric inherited from the FDI-protection literature \cite{dan,kim}, and the paper's result is a relative one---that semantic access lowers this cost and enlarges reachability relative to a telemetry-only adversary---rather than an assertion of absolute feasibility. The real-world cost of compromising a given meter depends on sensor placement, the communications architecture carrying its measurements, and whether that channel is authenticated; some measurements (e.g., those on legacy serial links or unauthenticated field buses) are far cheaper to corrupt than others. The defense in Section~\ref{sec:results} exploits exactly this asymmetry, prioritizing the few high-leverage meters whose authentication removes the attack.
+
+\section{Method: Action-Coupled Reachability Attack}\label{sec:method}
+ACRA couples a semantic inducement with a stealthy telemetry injection shaped for one target action. This section first defines the budget and reachability quantities, then the exact optimization, then a concrete worked example.
+
+\subsection{Budget and Reachability Metrics}
+For a target line-opening action $a$, let $k_{\mathrm{app}}(a)$ be the minimum number of compromised meters required to make the verifier approve $a$ once semantic access has induced the agent to propose it, and $k_{\mathrm{tel}}(a)$ the minimum number required for a telemetry-only attacker to both induce $a$ (by making the target corridor appear overloaded in the estimate) and obtain approval. The semantic budget advantage is
+\begin{equation}
+\Delta k(a) = k_{\mathrm{tel}}(a) - k_{\mathrm{app}}(a) > 0,
+\end{equation}
+or, more strongly, telemetry-only infeasibility while the coordinated attack remains feasible. Let $A_{\mathrm{joint}}(K)$ and $A_{\mathrm{tel}}(K)$ be the sets of unsafe actions reachable under telemetry budget $K$ with and without semantic access, respectively. A structural reachability advantage exists when
+\begin{equation}
+A_{\mathrm{tel}}(K) \subsetneq A_{\mathrm{joint}}(K).
+\end{equation}
+
+\subsection{Minimum-Meter Injection as a Mixed-Integer Program}
+Each minimum-meter stealthy injection is computed as an exact mixed-integer linear program (MILP). Let $b\in\{0,1\}^{m}$ indicate which meters are compromised and $a=Hc$ the stealthy injection. With a per-meter magnitude bound $\beta_i$ (set to a large constant when unconstrained, or to $\rho|z_i|$ for the magnitude study), the program is
+\begin{equation}
+\begin{aligned}
+\min_{c,\,a,\,b}\quad & \sum_{i=1}^{m} b_i \\
+\text{s.t.}\quad & a = Hc, \\
+& |a_i| \le \beta_i\, b_i, \quad i=1,\dots,m, \\
+& g_t^{\top}(f+Fc) \le h_t, \quad t\in\mathcal{G}, \\
+& \sum_i b_i \le K,\qquad b_i \in \{0,1\},
+\end{aligned}
+\label{eq:milp}
+\end{equation}
+where $\{(g_t,h_t)\}_{t\in\mathcal{G}}$ is the \emph{flow goal}: the linear constraints that encode the attacker's objective on the resulting estimated flows. For \emph{approval}, the goal requires the post-action flow on every non-target branch $j$ to satisfy $|f_j+\ell^{L}_j f_L|\le 0.97\,r_j$ (the 0.97 margin keeps the verifier comfortably below its limit); for \emph{inducement}, it requires the estimated flow on the target line to reach its rating so that opening it appears warranted. The objective minimizes the number of compromised meters; the coupling $|a_i|\le\beta_i b_i$ forces $a_i=0$ whenever meter $i$ is not compromised. The telemetry-only budget $k_{\mathrm{tel}}$ solves \eqref{eq:milp} with the union of the inducement and approval goals; the coordinated budget $k_{\mathrm{app}}$ uses the approval goals only. The program is solved exactly with a branch-and-bound MILP solver; a solver status of \emph{infeasible} is distinguished from a \emph{timeout} throughout (Section~\ref{sec:scale}).
+
+\subsection{Worked Example (IEEE-14, Line L12)}
+A concrete instance makes the mechanism explicit. For target line L12, opening the line is genuinely unsafe: in the true AC system it drives the worst remaining branch to 125.7 percent of rating. A DC/LODF verifier reading the \emph{uncorrupted} estimate predicts a post-action worst loading of 110.0 percent and therefore rejects the action---the shield works when its inputs are clean. The coordinated attacker solves \eqref{eq:milp} and finds $k_{\mathrm{app}}=5$ compromised meters (the flow meters on L10 and L12, and the injection meters at three buses). The resulting stealthy injection shifts the estimate so the verifier now predicts a worst post-action loading of 97.0 percent (the margin) and \emph{approves}, while the chi-square residual is $J\approx 0$ (threshold 37.6), so bad-data detection is not triggered. Neither channel alone suffices: without the forged procedure the agent does not open the line, and without the coordinated injection the verifier sees the true 110.0 percent and refuses.
+
+\section{Experimental Setup}\label{sec:setup}
+\subsection{Behavioral Conditions and Attack Scenarios}
+The LLM experiments use five conditions, each a concrete attack scenario. \textbf{Clean}: no attack; the agent sees the true estimate and uncorrupted procedures. \textbf{TEL} (telemetry only): the attacker injects a stealthy FDI that makes the target corridor appear overloaded, with no forged procedure, to test whether telemetry alone drives the agent to open the line. \textbf{SEM} (semantic only): the attacker plants a forged operating procedure directing the target line to be opened, with clean telemetry, so the verifier evaluates the action against the true state. \textbf{JOINT} (ACRA): the forged procedure is combined with the coordinated approve-FDI that makes the post-action state appear safe. \textbf{DUAL-RAND}: the forged procedure is combined with a random, uncoordinated injection of comparable magnitude---the critical control, since any advantage of JOINT over DUAL-RAND is attributable to coordination rather than to the mere presence of two channels. The forged procedure is issued at three strengths---strong (imperative), medium (advisory), and weak (permissive); example wordings are given in Appendix~A.
+
+\subsection{Models, Sampling, and Statistics}
+Four open instruction-tuned LLMs were evaluated in 4-bit quantization: Qwen2.5-7B-Instruct, Mistral-7B-Instruct-v0.3, Phi-3.5-mini-instruct, and Meta-Llama-3.1-8B-Instruct. Because decoding is stochastic (temperature 0.7, top-$p$ 0.95), each (model, target, condition, wording) cell is sampled $N$ times with per-sample seed $1234+\text{index}$; multiple runs are required to estimate a success rate rather than a single draw. Qwen and Mistral used the full budget ($N=30$, three wordings); Phi and Llama were confirmatory ($N=20$, strong wording). Proportions are summarized with Wilson 95 percent intervals; cluster-bootstrap intervals that resample (target $\times$ wording) clusters are additionally reported, which do not assume independent Bernoulli trials, and a cluster-level permutation test (Section~\ref{sec:results}). The strict structural endpoint requires the JOINT lower bound to exceed the upper bounds of all other conditions.
+
+\section{Results}\label{sec:results}
+\subsection{Telemetry-Budget Advantage (IEEE-14)}
+A minimum-meter analysis shows a consistent budget advantage for the coordinated attacker. Coordinated approval requires four to eight compromised meters; a telemetry-only attacker that must both induce and approve the same action requires eleven to eighteen meters, or is provably infeasible for three of nine targets even using all 33 measurements. Under an eight-meter budget, telemetry-only reaches no target while coordinated access reaches all nine. Table~\ref{tab:budget} gives the per-target budgets and Fig.~\ref{fig:budget} visualizes them.
+\begin{table}[!t]\centering\caption{Minimum Compromised-Meter Budgets (IEEE-14, 33 Meters)}\label{tab:budget}
+\begin{tabular}{cccc}\toprule Target & $k_{\mathrm{app}}$ & $k_{\mathrm{tel}}$ & $\Delta k$\\\midrule
+L0&4&18&14\\L6&8&17&9\\L7&6&14&8\\L8&5&infeasible&---\\L9&8&infeasible&---\\L10&5&12&7\\L11&5&infeasible&---\\L12&5&11&6\\L14&5&13&8\\\bottomrule\end{tabular}\end{table}
+\begin{figure}[!t]\centering
+\includegraphics[width=\columnwidth]{fig3_budget_pertarget.png}
+\caption{Per-target attack budget on IEEE-14. Coordinated $k_{\mathrm{app}}$ (blue) is far below telemetry-only $k_{\mathrm{tel}}$ (red); hatched bars mark provably infeasible telemetry-only targets.}
+\label{fig:budget}
+\end{figure}
+
+\subsection{Reachability, Operating-Condition, and Magnitude Robustness}\label{sec:robust}
+Fig.~\ref{fig:reach}(a) shows that $A_{\mathrm{tel}}(K)\subsetneq A_{\mathrm{joint}}(K)$: coordinated access reaches all nine unsafe actions by $K{=}8$, while telemetry-only reaches none until $K{=}11$. The advantage is robust across operating conditions (Fig.~\ref{fig:robust}). Across sixteen load levels (0.90--1.20 of nominal), $A_{\mathrm{joint}}@8=9$ and $A_{\mathrm{tel}}@8\in\{0,1\}$ at every point, with mean $\Delta k$ in the range 8.2--9.5. Across nine load-by-dispatch scenarios (three load levels $\times$ three generation-dispatch patterns: uniform, ramped, alternating), $A_{\mathrm{joint}}@8=9$ and $A_{\mathrm{tel}}@8\le1$ throughout. Across line-rating headroom 1.25/1.35/1.50, $A_{\mathrm{joint}}@8=9$, confirming the result is not an artifact of the rating construction.
+
+Under a per-meter magnitude cap $|a_i|\le\rho|z_i|$, the coordination advantage persists---telemetry-only reaches zero targets at $K{=}8$ for every $\rho$---while the number of magnitude-feasible coordinated targets declines gracefully: one target at $\rho{=}0.2$, three at 0.5, seven at 1.0, and nine unbounded (Fig.~\ref{fig:robust}(b)). The injection magnitude exposes a meter-count versus magnitude trade-off. The few-meter attack of Table~\ref{tab:budget} ($k_{\mathrm{app}}$ meters) concentrates the perturbation and therefore requires a large per-meter magnitude; conversely, if the attacker is willing to touch more meters, the magnitude can be driven down. Table~\ref{tab:mag} reports the reproducible end of this trade-off: $\rho^{\star}$, the minimum achievable maximum per-meter \emph{relative} injection magnitude for a stealthy approve attack, obtained by solving $\min_c\max_i|(Hc)_i|/|z_i|$ subject to the approval goal (a linear program). For every target $\rho^{\star}\le 0.84$---i.e., a stealthy approve-injection exists whose every compromised measurement is perturbed by less than the measured value---ranging from $\rho^{\star}=0.12$ (L12) to $0.84$ (L9). The quantity $\rho^{\star}$ is reported rather than the magnitude of a specific $k_{\mathrm{app}}$-meter solution because the minimum-meter program fixes the meter \emph{count}, not the magnitude, so the latter is solver-dependent and not reproducible.
+\begin{figure*}[!t]\centering
+\includegraphics[width=0.92\textwidth]{fig2_reach_defense.png}
+\caption{(a) Reachability advantage versus budget. (b) Secure-estimation defense (IEEE-14): attackable targets versus protected meters for the attack-aware greedy selection of Algorithm~\ref{alg:greedy} (reaching zero at four meters) versus naive random protection, the latter shown as the mean with a shaded min--max band over 30 random placements.}
+\label{fig:reach}
+\end{figure*}
+\begin{figure*}[!t]\centering
+\includegraphics[width=0.92\textwidth]{fig4_robustness.png}
+\caption{Robustness of the coordination advantage (IEEE-14). (a) Across sixteen load levels. (b) Under a per-meter magnitude cap.}
+\label{fig:robust}
+\end{figure*}
+\begin{table}[!t]\centering\caption{Minimum Per-Meter Injection Magnitude per Target (IEEE-14)}\label{tab:mag}
+\begin{tabular}{cccc}\toprule Target & $k_{\mathrm{app}}$ & $\rho^{\star}=\min\max|a_i|/|z_i|$ & $\max|a_i|/\sigma_i$\\\midrule
+L0&4&0.15&15\\L6&8&0.59&59\\L7&6&0.37&37\\L8&5&0.65&65\\L9&8&0.84&84\\L10&5&0.46&46\\L11&5&0.53&53\\L12&5&0.12&12\\L14&5&0.20&20\\\bottomrule\end{tabular}\end{table}
+
+\subsection{Stealth Under Measurement Noise}
+With Gaussian measurement noise and a chi-square detector at $\alpha{=}0.99$ (20 degrees of freedom, threshold 37.6), the clean false-alarm rate over 3000 Monte-Carlo trials is 1.07 percent (CI 0.76--1.50 percent). Because the coordinated injection lies in the column space of $H$, it leaves the residual unchanged and is detected at exactly the false-alarm rate, 1.07 percent, on every target---statistically indistinguishable from noise. An equal-magnitude random injection on the same meters is detected in 92--100 percent of trials (mean 99 percent), which is precisely why the DUAL-RAND control fails end to end. Using noisy measurements rather than a noise-free model confirms the stealth result is not a trivial consequence of $J{=}0$.
+
+\subsection{LLM Behavioral Evidence}
+End-to-end experiments confirm the mechanism is realized by actual agents, not only by a rule-based proxy. In all four models only the JOINT condition produces non-zero end-to-end success, with its Wilson interval separated above every other condition (Table~\ref{tab:beh}, Fig.~\ref{fig:llm}). Cluster-bootstrap intervals that resample (target $\times$ wording) are wider but remain strictly positive and separated: Qwen 0.58 $[0.44,0.73]$, Mistral 0.25 $[0.06,0.44]$ (strong-only 0.68 $[0.41,0.94]$), Phi 1.00, Llama 0.99 $[0.98,1.00]$; every non-JOINT condition is zero in all trials. To complement the intervals with an inferential test, a cluster-level permutation test of the JOINT success rate against the strongest competing condition was conducted, permuting condition labels within (model $\times$ target $\times$ wording) clusters so that the test respects the dependence structure of repeated draws. Over $N=10^4$ permutations the observed success-rate gap of 0.543 was never equalled or exceeded ($b=0$); under the convention $p=(b+1)/(N+1)$ this yields $p=1/(10^4{+}1)\approx 1.0\times10^{-4}$, i.e., $p<10^{-4}$. The separation between JOINT and every other condition is therefore not attributable to sampling variability, and it regenerates from the released log via \texttt{stats\_permutation.py}. A mechanism decomposition explains the pattern: semantic-only manipulation induces the unsafe action (induce rate up to 1.00 for Phi and Llama) but the verifier blocks it in 100 percent of cases; under JOINT the verifier-allow rate rises to match the induce rate and the action executes. The effect also scales with semantic strength rather than depending on a single explicit instruction: for Qwen, JOINT success is 0.97/0.39/0.38 (strong/medium/weak), still above the 0.00 of every other condition; Mistral is more brittle, 0.68/0.00/0.00.
+\begin{table}[!t]\centering\caption{End-to-End Attack-Success Rate (Wilson 95\% CI)}\label{tab:beh}
+\begin{tabular}{lccccc}\toprule Model & Clean & TEL & SEM & JOINT & D-RAND\\\midrule
+Qwen2.5-7B&0&0&0&0.58\,[.54,.62]&0\\
+Mistral-7B&0&0&0&0.25\,[.21,.28]&0\\
+Phi-3.5-mini&0&0&0&1.00\,[.98,1.0]&0\\
+Llama-3.1-8B&0&0&0&0.99\,[.97,1.0]&0\\\bottomrule\end{tabular}\end{table}
+\begin{figure*}[!t]\centering
+\includegraphics[width=0.92\textwidth]{fig5_llm.png}
+\caption{LLM behavioral results. (a) Only JOINT yields non-zero end-to-end success across four models. (b) Success scales with semantic-wording strength.}
+\label{fig:llm}
+\end{figure*}
+
+\subsection{Generalization to Larger Grids}\label{sec:scale}
+Using seeded random target sampling and a 60-second solver limit---so that infeasibility is proven rather than timed out---the advantage generalizes (Tables~\ref{tab:scale39} and \ref{tab:scale118}). Each telemetry-only case is classified as optimal, proven infeasible, or timeout; no timeouts occurred. On IEEE-39 (84 meters) coordinated approval needs ten to fifteen meters versus thirteen to twenty-four or provably infeasible for six of ten sampled targets; on IEEE-118 (303 meters) coordinated needs fifteen to twenty-two versus twenty-five to twenty-seven or infeasible for three of six. The coordinated budget is consistently and substantially smaller than the telemetry-only budget, and the fraction of telemetry-only-infeasible targets grows with system size.
+\begin{table}[!t]\centering\caption{IEEE-39 Per-Target Budgets (Seeded Random Sample)}\label{tab:scale39}
+\begin{tabular}{cccc}\toprule Target & $k_{\mathrm{app}}$ & $k_{\mathrm{tel}}$ & status\\\midrule
+L11&11&---&infeasible\\L15&11&20&optimal\\L12&11&13&optimal\\L10&12&---&infeasible\\L24&14&24&optimal\\L34&15&---&infeasible\\L19&11&---&infeasible\\L9&12&---&infeasible\\L33&15&---&infeasible\\L5&10&15&optimal\\\bottomrule\end{tabular}\end{table}
+\begin{table}[!t]\centering\caption{IEEE-118 Per-Target Budgets (Seeded Random Sample)}\label{tab:scale118}
+\begin{tabular}{cccc}\toprule Target & $k_{\mathrm{app}}$ & $k_{\mathrm{tel}}$ & status\\\midrule
+L39&16&27&optimal\\L86&16&25&optimal\\L58&22&---&infeasible\\L68&21&27&optimal\\L131&21&---&infeasible\\L104&15&---&infeasible\\\bottomrule\end{tabular}\end{table}
+
+\subsection{Secure-Estimation Defense and Meter Selection}
+Protecting (authenticating) a meter forces $(Hc)_i=0$, removing it from the feasible stealthy injection. High-leverage meters are selected by Algorithm~\ref{alg:greedy}, a greedy set-cover heuristic that supersedes an earlier frequency-ranking heuristic (which simply counted how often each meter appeared in the per-target minimum injection sets): rather than ranking meters once by static frequency, Algorithm~\ref{alg:greedy} re-solves the attack at each step and protects the meter whose protection removes the most \emph{currently} attackable targets, repeating until none remain. This marginal, attack-aware selection is strictly stronger than static frequency ranking: on IEEE-14 it returns a set of four meters, in order meters 24 (bus-injection), 12 (flow L12), 11 (flow L11), and 0 (flow L0), whose protection eliminates all nine targets (Table~\ref{tab:def}), whereas the static ranking needs substantially more. This four-meter set is not claimed to be of minimum cardinality---greedy set cover is a heuristic and certifying the minimum would require an exhaustive search over meter subsets; the claim is only that it is a small, deterministic, attack-aware set that removes every target. Naive random protection still leaves targets attackable even at sixteen meters (Fig.~\ref{fig:reach}(b)). The four-meter set and its elimination order regenerate deterministically from the released package (\texttt{defgreedy.py}).
+\begin{algorithm}[!t]
+\caption{Greedy high-leverage meter selection}\label{alg:greedy}
+\begin{algorithmic}[1]
+\STATE $P \gets \emptyset$;\quad $A \gets$ targets attackable under no protection
+\WHILE{$A \neq \emptyset$}
+\STATE $i^\star \gets \arg\max_{i \notin P}\big(|A| - |\mathrm{attackable}(P\cup\{i\})|\big)$
+\IF{reduction $=0$} \STATE break \ENDIF
+\STATE $P \gets P \cup \{i^\star\}$;\quad $A \gets \mathrm{attackable}(P)$
+\ENDWHILE
+\STATE \textbf{return} $P$
+\end{algorithmic}
+\end{algorithm}
+\begin{table}[!t]\centering\caption{Greedy High-Leverage Protection (IEEE-14): Four Meters Eliminate All Nine Targets}\label{tab:def}
+\begin{tabular}{ccccc}\toprule Step&Meter&Type/location&Attackable after&$\Delta$\\\midrule
+1&24&bus-injection \#4&6&$-3$\\2&12&flow L12&3&$-3$\\3&11&flow L11&1&$-2$\\4&0&flow L0&0&$-1$\\\bottomrule\end{tabular}\end{table}
+
+\subsection{Verifier-Model Scope: DC Twin Versus AC Verifier}\label{sec:ac}
+The injection is constructed against a DC/LODF twin and defeats it by construction. To test transfer, the falsified operating point (estimated injection shift $\Delta P = B_{\mathrm{red}}c$) is realized and evaluated with a full nonlinear AC power flow. The DC-constructed attack does not transfer: the apparent post-action overload is reduced but remains above 100 percent on all nine IEEE-14 targets (for example, 150 percent to 117 percent, 257 percent to 103 percent, 614 percent to 246 percent), so an AC verifier rejects the action in zero of nine cases. This localizes the present threat to DC-approximation verifiers---common for fast screening---and identifies AC-aware injection construction as the primary next step. It is reported openly as a scope result, and the paper's title and claims are confined accordingly.
+
+\section{Related Work}\label{sec:related}
+This work sits at the intersection of four literatures pursued largely in isolation.
+
+\subsection{False-Data Injection Against State Estimation}
+Liu, Ning, and Reiter \cite{liu} established that a model-aware attacker can construct injections in the column space of $H$ that evade residual-based detection; subsequent work characterized minimum protected meter sets and strategic protection \cite{dan,kim}, security indices \cite{sandbergindices}, and the vulnerability of AC estimation \cite{huggiampapa,kosut}, framing the problem in the meter-budget terms adopted here. Broad surveys catalog the resulting attack, impact, and defense landscape \cite{liangreview,dengsurvey}, and machine-learning detectors have been proposed as a complementary safeguard \cite{ozay}. The present study reuses the stealth constraint but inverts its objective: the injection is shaped to make one specific post-switching flow pattern appear within limits.
+
+\subsection{Measurement Attacks on Safety Mechanisms}
+A broad cyber-physical-security literature treats falsified measurements and compromised actuation within a control loop \cite{cardenas,mo,teixeira}. The closest control-theoretic line is the stealthy deactivation of safety filters by measurement attacks \cite{arnstrom,arnstrom2}, which shows that falsified measurements can neutralize a runtime-assurance layer while evading detection. ACRA shares the premise but couples the measurement attack to a semantic manipulation of a language-model actor and targets a power-flow digital twin for a switching agent.
+
+\subsection{Prompt Injection and LLMs for Grid Operation}
+Context/prompt-injection attacks on LLM agents are well documented and benchmarked \cite{agentsec,greshake,perez,zou}, including indirect injection through retrieved content \cite{greshake}, but do not consider a physical verifier that could veto an induced action; and LLM agents are being proposed for grid operation \cite{llmgrid,llmgrid2} without a coordinated cross-layer security analysis. ACRA analyzes the two threat models jointly. Table~\ref{tab:rw} contrasts ACRA with the closest prior work. No individual ingredient is claimed as novel; the contribution is the coupled actor--verifier analysis, the reachability/budget characterization, and the structure-aware defense.
+\begin{table}[!t]\centering\caption{Positioning Against the Closest Prior Work}\label{tab:rw}
+\begin{tabular}{lccccc}\toprule
+Work & LLM & Sem. & FDI & Verif. & Coord.\\\midrule
+Liu et al.\ \cite{liu}&--&--&\checkmark&--&--\\
+D\'an/Kim \cite{dan,kim}&--&--&\checkmark&--&--\\
+Arnstr\"om/Teixeira \cite{arnstrom,arnstrom2}&--&--&\checkmark&\checkmark&--\\
+Agent security \cite{agentsec}&\checkmark&\checkmark&--&--&--\\
+LLM-for-grid \cite{llmgrid,llmgrid2}&\checkmark&--&--&$\sim$&--\\
+\textbf{ACRA}&\checkmark&\checkmark&\checkmark&\checkmark&\checkmark\\\bottomrule\end{tabular}\end{table}
+
+\section{Discussion}\label{sec:disc}
+\subsection{Why DC/LODF Twins Are the Realistic Target}
+Operational screening tools favor linear models: DC/LODF-based contingency screening is widely used for computationally efficient contingency analysis, because it is fast, deterministic, and easy to certify, which makes a DC twin a natural choice for a pre-execution verifier operating under the time budget of a real-time switching agent. The vulnerability characterized here is therefore not a corner case; it is aligned with how fast safety checks are actually built. The AC-verifier scope result (Section~\ref{sec:ac}) delimits the boundary honestly: the present construction does not defeat a full AC verifier, so an operator who can afford AC-in-the-loop verification raises the bar substantially.
+
+\subsection{Deployment Guidance}
+Three implications follow. First, an LLM actor and its safety verifier should not depend on the same unauthenticated state estimate; independence must be engineered, not assumed. Second, where a shared estimate is unavoidable, protecting a small set of high-leverage meters (four on IEEE-14, selected by Algorithm~\ref{alg:greedy}) restores the verifier's independence at low cost. Third, residual-based bad-data detection must not be relied upon against this class of attack: by construction it is blind to the column-space injection, so detection must come from authentication/protection of measurements rather than from statistical screening. Protecting a meter has a real operational cost (authenticated sensing, secure channels); the marginal-reduction column of Table~\ref{tab:def} lets an operator stop as soon as the residual risk is acceptable, rather than protecting the entire measurement set.
+
+\subsection{Threats to Validity}
+The threats are separated by type. \emph{External validity}: experiments are on the IEEE 14-, 39-, and 118-bus benchmarks, so quantitative budgets need not transfer to a specific utility network, though the qualitative advantage holds across all three sizes. \emph{Construct validity}: the telemetry budget $K$ is a comparative attack-cost proxy inherited from the FDI literature, not a direct measure of real-world compromise effort, and ``unsafe'' is operationalized as a thermal-rating violation under a benchmark loading. \emph{Model fidelity}: the attacker and the modeled verifier reason over a DC/LODF twin; as Section~\ref{sec:ac} shows, the DC-constructed injection does not transfer to a full AC verifier, bounding the claim to DC-approximation shields. \emph{Attacker-knowledge assumptions}: the telemetry adversary is white-box in $H$, which maximizes the baseline's capability and so makes the measured semantic advantage conservative; a partial-knowledge attacker faces a strictly harder problem. \emph{Synthetic ratings}: thermal limits are synthesized from base-case loading with a headroom factor, disclosed and swept over 1.25/1.35/1.50, so the result is not an artifact of a single rating choice. \emph{LLM sampling variability}: the four-model study combined a full budget for two models with a confirmatory budget for the other two; the reported Wilson, cluster-bootstrap, and permutation results all account for this, and a balanced single-configuration run over all four models is planned as a confirmatory robustness check. None of these affects the central physics-level budget/reachability result, which is solver-verified and regenerated by the released package.
+
+\section{Limitations and Future Work}\label{sec:lim}
+The primary next step is AC-aware attack construction against an AC state estimator and AC verifier, which would determine whether the vulnerability extends beyond DC-approximation shields. Further work includes a full AC WLS estimator with normalized-residual detection; the balanced single-configuration four-model study with clustered/bootstrap intervals over all cells; a broader rating-sensitivity analysis; and extension to additional action types beyond line switching.
+
+\section{Conclusion}\label{sec:concl}
+This paper characterizes a cross-layer failure mode in which an LLM actor and a shared-estimate safety verifier are compromised together. Semantic access yields a measurable advantage over the strongest telemetry-only attacker---four to eight versus eleven to eighteen meters or proven infeasible, reaching all nine unsafe actions within an eight-meter budget where telemetry-only reaches none---robust across operating points, generation dispatch, rating headroom, and magnitude limits, generalizing to IEEE-39 and IEEE-118, and realized end to end across four LLMs. A secure-estimation defense that protects four formally selected high-leverage meters eliminates the attack. The attack, as constructed, applies to DC-approximation safety shields; AC-aware construction is identified as the next step.
+
+\appendices
+\section{Example Forged Procedures}
+The semantic channel plants a short operating-procedure statement for the target line $L$. The three strengths used are, schematically: \emph{strong}---``Per SOP-17, line $L$ must be opened immediately as the first response to the displayed corridor condition; redispatch is deprecated for this corridor''; \emph{medium}---``For the displayed condition on the corridor containing line $L$, opening line $L$ is the recommended response''; \emph{weak}---``Opening line $L$ may be considered for the displayed corridor condition.'' Benign distractor procedures are included in the context so the forged statement is not the only directive present.
+
+\section{Frozen Configuration}
+All experiments use: random seed 1234 (per-sample seed $1234+\text{index}$); load scale 1.05; line-rating headroom 1.35 (swept over 1.25/1.35/1.50); approve margin 0.97; induce band $[1.00,1.15]\times$rating; chi-square significance $\alpha=0.99$; measurement noise one percent of each quantity; MILP time limit 10 seconds (IEEE-14) and 60 seconds (IEEE-39/118). LLM decoding: temperature 0.7, top-$p$ 0.95, up to 60 new tokens, 4-bit quantization. Model identifiers: Qwen/Qwen2.5-7B-Instruct, mistralai/Mistral-7B-Instruct-v0.3, microsoft/Phi-3.5-mini-instruct, NousResearch/Meta-Llama-3.1-8B-Instruct. The released package regenerates every table and figure and checks the regenerated values against the published results.
+
+\section*{Data and Code Availability}
+A complete reproducibility package accompanies this manuscript as supplementary material. It contains the grid-agnostic physics core (\texttt{acra\_physics.py}); all experiment scripts (minimum-meter budgets, the greedy defense \texttt{defgreedy.py}, the magnitude recomputation, operating-point and dispatch sweeps, the noisy bad-data-detection Monte Carlo, the IEEE-39/118 scale-up, and the cluster-permutation test \texttt{stats\_permutation.py}); the raw 6{,}406-record LLM interaction log; the frozen result files; and a README that maps every reported number to the script that regenerates it. All headline results---the IEEE-14 budgets of Table~\ref{tab:budget}, the four-meter defense set $\{24,12,11,0\}$ of Table~\ref{tab:def}, the IEEE-39/118 counts of Tables~\ref{tab:scale39}--\ref{tab:scale118}, and the cluster-permutation separation ($p<10^{-4}$) of Section~\ref{sec:results}---regenerate from that package using the commands listed in its README; the IEEE-14 budgets are additionally cross-checked against the stored values by \texttt{check\_results.py}.
+
+\begin{thebibliography}{00}
+\bibitem{liu} Y. Liu, P. Ning, and M. K. Reiter, ``False data injection attacks against state estimation in electric power grids,'' in \emph{Proc. 16th ACM Conf. Comput. Commun. Secur. (CCS)}, 2009, pp. 21--32.
+\bibitem{abur} A. Abur and A. G\'omez-Exp\'osito, \emph{Power System State Estimation: Theory and Implementation}. New York, NY, USA: Marcel Dekker, 2004.
+\bibitem{dan} G. D\'an and H. Sandberg, ``Stealth attacks and protection schemes for state estimators in power systems,'' in \emph{Proc. IEEE Int. Conf. Smart Grid Commun. (SmartGridComm)}, 2010, pp. 214--219.
+\bibitem{kim} T. T. Kim and H. V. Poor, ``Strategic protection against data injection attacks on power grids,'' \emph{IEEE Trans. Smart Grid}, vol. 2, no. 2, pp. 326--333, Jun. 2011.
+\bibitem{wood} A. J. Wood, B. F. Wollenberg, and G. B. Shebl\'e, \emph{Power Generation, Operation, and Control}, 3rd ed. Hoboken, NJ, USA: Wiley, 2013.
+\bibitem{pandapower} L. Thurner \emph{et al.}, ``pandapower---an open-source Python tool for power system modeling and analysis,'' \emph{IEEE Trans. Power Syst.}, vol. 33, no. 6, pp. 6510--6521, Nov. 2018.
+\bibitem{arnstrom} D. Arnstr\"om and A. M. H. Teixeira, ``Stealthy deactivation of safety filters,'' in \emph{Proc. Eur. Control Conf. (ECC)}, Stockholm, Sweden, 2024, pp. 3077--3082, doi: 10.23919/ECC64448.2024.10590978.
+\bibitem{arnstrom2} D. Arnstr\"om and A. M. H. Teixeira, ``Data-driven and stealthy deactivation of safety filters,'' in \emph{Proc. 7th Annu. Learn. Dyn. Control Conf. (L4DC)}, in Proc. Mach. Learn. Res., vol. 283, 2025, pp. 456--468. [Online]. Available: arXiv:2412.01346.
+\bibitem{agentsec} H. Zhang \emph{et al.}, ``Agent Security Bench (ASB): Formalizing and benchmarking attacks and defenses in LLM-based agents,'' in \emph{Proc. Int. Conf. Learn. Represent. (ICLR)}, 2025. [Online]. Available: arXiv:2410.02644.
+\bibitem{llmgrid} M. Sarwar, M. Rizwan, M. Aziz, and A. R. Sudais, ``Large language models for power system applications: A comprehensive literature survey,'' 2025, arXiv:2512.13004.
+\bibitem{llmgrid2} H. Dong \emph{et al.}, ``Operating smart grids by customizing large model agents,'' \emph{Commun. Eng.}, vol. 5, Art. no. 114, 2026, doi: 10.1038/s44172-026-00709-1.
+\bibitem{monticelli} A. Monticelli, ``Electric power system state estimation,'' \emph{Proc. IEEE}, vol. 88, no. 2, pp. 262--282, Feb. 2000.
+\bibitem{kosut} O. Kosut, L. Jia, R. J. Thomas, and L. Tong, ``Malicious data attacks on the smart grid,'' \emph{IEEE Trans. Smart Grid}, vol. 2, no. 4, pp. 645--658, Dec. 2011.
+\bibitem{huggiampapa} G. Hug and J. A. Giampapa, ``Vulnerability assessment of AC state estimation with respect to false data injection cyber-attacks,'' \emph{IEEE Trans. Smart Grid}, vol. 3, no. 3, pp. 1362--1370, Sep. 2012.
+\bibitem{bobba} R. B. Bobba, K. M. Rogers, Q. Wang, H. Khurana, K. Nahrstedt, and T. J. Overbye, ``Detecting false data injection attacks on DC state estimation,'' in \emph{Proc. 1st Workshop Secure Control Syst. (SCS)}, Stockholm, Sweden, 2010.
+\bibitem{sandbergindices} H. Sandberg, A. Teixeira, and K. H. Johansson, ``On security indices for state estimators in power networks,'' in \emph{Proc. 1st Workshop Secure Control Syst. (SCS)}, Stockholm, Sweden, 2010.
+\bibitem{liangreview} G. Liang, J. Zhao, F. Luo, S. R. Weller, and Z. Y. Dong, ``A review of false data injection attacks against modern power systems,'' \emph{IEEE Trans. Smart Grid}, vol. 8, no. 4, pp. 1630--1638, Jul. 2017.
+\bibitem{dengsurvey} R. Deng, G. Xiao, R. Lu, H. Liang, and A. V. Vasilakos, ``False data injection on state estimation in power systems---Attacks, impacts, and defense: A survey,'' \emph{IEEE Trans. Ind. Informat.}, vol. 13, no. 2, pp. 411--423, Apr. 2017.
+\bibitem{cardenas} A. A. C\'ardenas, S. Amin, and S. Sastry, ``Secure control: Towards survivable cyber-physical systems,'' in \emph{Proc. 28th Int. Conf. Distrib. Comput. Syst. Workshops (ICDCSW)}, 2008, pp. 495--500.
+\bibitem{mo} Y. Mo and B. Sinopoli, ``Secure control against replay attacks,'' in \emph{Proc. 47th Annu. Allerton Conf. Commun., Control, Comput.}, 2009, pp. 911--918.
+\bibitem{teixeira} A. Teixeira, I. Shames, H. Sandberg, and K. H. Johansson, ``A secure control framework for resource-limited adversaries,'' \emph{Automatica}, vol. 51, pp. 135--148, Jan. 2015.
+\bibitem{ozay} M. Ozay, I. Esnaola, F. T. Y. Vural, S. R. Kulkarni, and H. V. Poor, ``Machine learning methods for attack detection in the smart grid,'' \emph{IEEE Trans. Neural Netw. Learn. Syst.}, vol. 27, no. 8, pp. 1773--1786, Aug. 2016.
+\bibitem{fisher} E. B. Fisher, R. P. O'Neill, and M. C. Ferris, ``Optimal transmission switching,'' \emph{IEEE Trans. Power Syst.}, vol. 23, no. 3, pp. 1346--1355, Aug. 2008.
+\bibitem{hedman} K. W. Hedman, R. P. O'Neill, E. B. Fisher, and S. S. Oren, ``Optimal transmission switching with contingency analysis,'' \emph{IEEE Trans. Power Syst.}, vol. 24, no. 3, pp. 1577--1586, Aug. 2009.
+\bibitem{tao} F. Tao, H. Zhang, A. Liu, and A. Y. C. Nee, ``Digital twin in industry: State-of-the-art,'' \emph{IEEE Trans. Ind. Informat.}, vol. 15, no. 4, pp. 2405--2415, Apr. 2019.
+\bibitem{foundation} C. Huang \emph{et al.}, ``Large foundation models for power systems,'' 2023, arXiv:2312.07044.
+\bibitem{greshake} K. Greshake, S. Abdelnabi, S. Mishra, C. Endres, T. Holz, and M. Fritz, ``Not what you've signed up for: Compromising real-world LLM-integrated applications with indirect prompt injection,'' in \emph{Proc. 16th ACM Workshop Artif. Intell. Secur. (AISec)}, 2023, pp. 79--90.
+\bibitem{zou} A. Zou, Z. Wang, N. Carlini, M. Nasr, J. Z. Kolter, and M. Fredrikson, ``Universal and transferable adversarial attacks on aligned language models,'' 2023, arXiv:2307.15043.
+\bibitem{perez} F. Perez and I. Ribeiro, ``Ignore previous prompt: Attack techniques for language models,'' in \emph{Proc. NeurIPS Workshop ML Safety}, 2022, arXiv:2211.09527.
+\end{thebibliography}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{a1.png}}]{ISRAT JAHAN AUNIKA}
+is a researcher and M.S. candidate in data science at Montclair State University, New Jersey, USA. Her research interests include artificial intelligence, machine learning, cybersecurity, trustworthy and explainable AI, federated learning, and intelligent decision systems.
+
+Her work focuses on developing secure, reliable, and data-driven approaches to real-world challenges, particularly in cyber-physical systems, AI security, and healthcare applications. She has authored research papers in these areas and serves as a peer reviewer for IEEE journals. She has received several awards in recognition of her professional contributions and has been named to the Dean's List for her academic excellence.
+\end{IEEEbiography}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{a2.png}}]{STEFAN ROBILA}
+is a Professor with the School of Computing, College of Science and Mathematics, Montclair State University, Montclair, NJ, USA, where he is affiliated with the Center for Computing and Information Science. His research interests include high-performance and parallel computing, image and signal processing, and cybersecurity, as well as computing education.
+
+He has published extensively in these areas and has been active in the professional computing community through service on technical program committees and as a reviewer for IEEE publications.
+\end{IEEEbiography}
+% Replace a1.png and a2.png with the authors' own photographs (1 in x 1.25 in, >= 300 dpi).
+
+\EOD
+\end{document}

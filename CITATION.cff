@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the associated ACRA manuscript."
+title: "ACRA: Coordinated Semantic–Telemetry Attacks on DC/LODF Safety Shields for LLM-Based Power-System Agents"
+type: software
+authors:
+  - family-names: Aunika
+    given-names: Israt Jahan
+  - family-names: Robila
+    given-names: Stefan
+repository-code: "https://github.com/Israt76/ACRA-LLM-Power-System-Safety"
